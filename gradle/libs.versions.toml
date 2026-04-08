@@ -1,8 +1,12 @@
 [versions]
+composeBom = "2024.12.01"
+composeActivity = "1.10.0"
+composeViewmodel = "2.10.0"
+
 # Android and Gradle
 gradlePlugin = "8.13.2"
-kotlin = "2.2.10"
-ksp = "2.2.10-2.0.2"
+kotlin = "2.1.0"
+ksp = "2.1.0-1.0.29"
 
 # AndroidX Core
 appcompat = "1.7.1"
@@ -65,8 +69,8 @@ jsoup = "1.21.1"
 
 timeago = "4.2.0"
 persistentCookieJar = "1.0.1"
-kotlinxSerializationJson = "1.10.0"
-kotlinxSerializationCore = "1.10.0"
+kotlinxSerializationJson = "1.8.0"
+kotlinxSerializationCore = "1.8.0"
 
 # Media3
 media3 = "1.9.1"
@@ -101,7 +105,7 @@ goVersion = "1.25.0"
 # Android and Gradle
 gradle-plugin = { module = "com.android.tools.build:gradle", version.ref = "gradlePlugin" }
 kotlin-plugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
-kotlin-stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib-jdk7", version.ref = "kotlin" }
+kotlin-stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "kotlin" }
 kotlin-allopen = { module = "org.jetbrains.kotlin:kotlin-allopen", version.ref = "kotlin" }
 ksp-plugin = { module = "com.google.devtools.ksp:symbol-processing-gradle-plugin", version.ref = "ksp" }
 kotlin-serialization = { module = "org.jetbrains.kotlin:kotlin-serialization", version.ref = "kotlin" }
@@ -204,6 +208,20 @@ espressoIntents = { module = "androidx.test.espresso:espresso-intents", version.
 desugarJdk = { module = "com.android.tools:desugar_jdk_libs", version.ref = "desugarJdk" }
 coverallsPlugin = { module = "org.kt3k.gradle.plugin:coveralls-gradle-plugin", version.ref = "coveralls" }
 
+# Compose
+compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "composeBom" }
+compose-ui = { group = "androidx.compose.ui", name = "ui" }
+compose-ui-graphics = { group = "androidx.compose.ui", name = "ui-graphics" }
+compose-ui-tooling = { group = "androidx.compose.ui", name = "ui-tooling" }
+compose-ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-tooling-preview" }
+compose-material3 = { group = "androidx.compose.material3", name = "material3" }
+compose-activity = { group = "androidx.activity", name = "activity-compose", version.ref = "composeActivity" }
+compose-viewmodel = { group = "androidx.lifecycle", name = "lifecycle-viewmodel-compose", version.ref = "composeViewmodel" }
+compose-runtime-livedata = { group = "androidx.compose.runtime", name = "runtime-livedata" }
+compose-foundation = { group = "androidx.compose.foundation", name = "foundation" }
+compose-material-icons-extended = { group = "androidx.compose.material", name = "material-icons-extended" }
+
+
 [bundles]
 room = ["roomRuntime", "roomKtx", "roomRxjava3", "roomGuava"]
 dagger = ["daggerRuntime", "daggerAndroid", "daggerAndroidSupport"]
@@ -213,6 +231,8 @@ rxjava3 = ["rxjava3", "rxandroid3"]
 media3 = ["media3Exoplayer", "media3ExoplayerDash", "media3ExoplayerHls", "media3ExoplayerRtsp", "media3Ui", "media3Extractor", "media3Database", "media3Decoder", "media3Datasource", "media3Common", "media3DatasourceOkhttp"]
 lifecycle = ["lifecycleExtensions", "lifecycleCommonJava8", "lifecycleLivedata", "lifecycleViewmodel"]
 testing = ["junit", "mockitoCore", "mockitoAndroid", "mockitoKotlin", "espressoCore", "espressoIntents"]
+compose = ["compose-ui", "compose-ui-graphics", "compose-ui-tooling-preview", "compose-material3", "compose-activity", "compose-viewmodel", "compose-runtime-livedata", "compose-foundation", "compose-material-icons-extended"]
+
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "gradlePlugin" }
@@ -222,3 +242,5 @@ kotlin-allopen = { id = "org.jetbrains.kotlin.plugin.allopen", version.ref = "ko
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 coveralls = { id = "com.github.kt3k.coveralls", version.ref = "coveralls" }
+kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+

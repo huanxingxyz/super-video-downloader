@@ -22,20 +22,11 @@
             app:currentItem="@{viewModel.currentTab}"
             app:items="@{viewModel.tabs}" />
 
-        <LinearLayout
-            android:id="@+id/drawer_layout_content"
+        <androidx.compose.ui.platform.ComposeView
+            android:id="@+id/drawer_compose_view"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_gravity="start"
-            android:orientation="vertical">
-
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/tabs_list"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                app:items="@{viewModel.tabs}" />
-
-        </LinearLayout>
+            android:layout_gravity="start" />
 
     </androidx.drawerlayout.widget.DrawerLayout>
 

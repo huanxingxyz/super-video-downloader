@@ -14,18 +14,15 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.myAllVideoBrowser.data.local.model.Suggestion
 import com.myAllVideoBrowser.data.local.room.entity.PageInfo
-import com.myAllVideoBrowser.databinding.FragmentBrowserHomeBinding
-import com.myAllVideoBrowser.ui.component.adapter.SuggestionAdapter
-import com.myAllVideoBrowser.ui.component.adapter.SuggestionListener
-import com.myAllVideoBrowser.ui.component.adapter.TopPageAdapter
+import com.myAllVideoBrowser.ui.compose.HomeTabScreen
 import com.myAllVideoBrowser.ui.main.home.MainViewModel
-import com.myAllVideoBrowser.ui.main.home.browser.BaseWebTabFragment
 import com.myAllVideoBrowser.ui.main.home.browser.BrowserListener
-import com.myAllVideoBrowser.ui.main.home.browser.TabManagerProvider
-import com.myAllVideoBrowser.ui.main.home.browser.webTab.WebTabFactory
-import com.myAllVideoBrowser.util.AppUtil
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import com.myAllVideoBrowser.ui.main.home.browser.BrowserViewModel
+import com.myAllVideoBrowser.ui.main.home.browser.TabManagerProvider
+import com.myAllVideoBrowser.ui.main.home.browser.BaseWebTabFragment
+import com.myAllVideoBrowser.ui.main.home.browser.webTab.WebTabFactory
 
 interface BrowserHomeListener : BrowserListener {
 
@@ -54,20 +51,13 @@ class BrowserHomeFragment : BaseWebTabFragment() {
     @Inject
     lateinit var viewModelFactory: ViewModelProvider.Factory
 
-    @Inject
-    lateinit var appUtil: AppUtil
-
-    lateinit var binding: FragmentBrowserHomeBinding
-
-    private lateinit var openPageIProvider: TabManagerProvider
-
     private lateinit var homeViewModel: BrowserHomeViewModel
 
     private lateinit var mainViewModel: MainViewModel
 
-    private lateinit var topPageAdapter: TopPageAdapter
+    private lateinit var browserViewModel: BrowserViewModel
 
-    private lateinit var suggestionAdapter: SuggestionAdapter
+    private lateinit var openPageIProvider: TabManagerProvider
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -75,43 +65,54 @@ class BrowserHomeFragment : BaseWebTabFragment() {
     ): View {
         mainViewModel = mainActivity.mainViewModel
         homeViewModel = ViewModelProvider(this, viewModelFactory)[BrowserHomeViewModel::class.java]
+        browserViewModel = ViewModelProvider(requireParentFragment(), viewModelFactory)[BrowserViewModel::class.java]
         openPageIProvider = mainActivity.mainViewModel.browserServicesProvider!!
 
-        topPageAdapter = TopPageAdapter(requireContext(), emptyList(), itemListener)
-        suggestionAdapter = SuggestionAdapter(requireContext(), emptyList(), suggestionListener)
-
-        binding = FragmentBrowserHomeBinding.inflate(inflater, container, false).apply {
-            buildWebTabMenu(this.browserHomeMenuButton, true)
-
-            this.viewModel = homeViewModel
-            this.mainVModel = mainViewModel
-            this.browserMenuListener = menuListener
-            this.topPagesGrid.adapter = topPageAdapter
-
-            this.homeEtSearch.setAdapter(suggestionAdapter)
-            this.homeEtSearch.addTextChangedListener(onInputHomeSearchChangeListener)
-            this.homeEtSearch.imeOptions = EditorInfo.IME_ACTION_DONE
-            this.homeEtSearch.setOnEditorActionListener { _, actionId, _ ->
-                if (actionId == EditorInfo.IME_ACTION_DONE) {
-                    this.homeEtSearch.clearFocus()
-                    viewModel?.viewModelScope?.launch {
-                        val inputText = (this@apply.homeEtSearch as EditText).text.toString()
-                        this@apply.homeEtSearch.text.clear()
-                        openNewTab(inputText)
-                    }
-                    false
-                } else false
-            }
-            this.goButton.setOnClickListener {
-                viewModel?.viewModelScope?.launch {
-                    val inputText = (this@apply.homeEtSearch as EditText).text.toString()
-                    this@apply.homeEtSearch.text.clear()
-                    openNewTab(inputText)
+        return androidx.compose.ui.platform.ComposeView(requireContext()).apply {
+            buildWebTabMenu(this, true)
+            setContent {
+                var tabsCount by androidx.compose.runtime.remember { 
+                    androidx.compose.runtime.mutableIntStateOf(browserViewModel.tabs.get()?.size ?: 0) 
                 }
+                
+                androidx.compose.runtime.DisposableEffect(browserViewModel.tabs) {
+                    val callback = object : androidx.databinding.Observable.OnPropertyChangedCallback() {
+                        override fun onPropertyChanged(sender: androidx.databinding.Observable?, propertyId: Int) {
+                            tabsCount = browserViewModel.tabs.get()?.size ?: 0
+                        }
+                    }
+                    browserViewModel.tabs.addOnPropertyChangedCallback(callback)
+                    onDispose {
+                        browserViewModel.tabs.removeOnPropertyChangedCallback(callback)
+                    }
+                }
+
+                HomeTabScreen(
+                    tabCount = tabsCount,
+                    onSearch = { input ->
+                        openNewTab(input)
+                    },
+                    onSiteClick = { url ->
+                        openNewTab(url)
+                    },
+                    onHelpClick = {
+                        navigateToHelp()
+                    },
+                    onSettingsClick = {
+                        // TODO: Navigate to settings
+                    },
+                    onMenuClick = {
+                        showPopupMenu()
+                    },
+                    onTabCountClick = {
+                        mainViewModel.openNavDrawerEvent.call()
+                    },
+                    onDownloadMethodClick = {
+                        navigateToHelp()
+                    }
+                )
             }
         }
-
-        return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -141,44 +142,9 @@ class BrowserHomeFragment : BaseWebTabFragment() {
         mainViewModel.bookmarksList.set(bookmarksList)
     }
 
-    private val suggestionListener = object : SuggestionListener {
-        override fun onItemClicked(suggestion: Suggestion) {
-            openNewTab(suggestion.content)
-        }
-    }
-
     private fun openNewTab(input: String) {
         if (input.isNotEmpty()) {
             openPageIProvider.getOpenTabEvent().value = WebTabFactory.createWebTabFromInput(input)
-        }
-    }
-
-    private val onInputHomeSearchChangeListener = object : TextWatcher {
-        override fun afterTextChanged(s: Editable) {
-            val input = s.toString()
-            homeViewModel.searchTextInput.set(input)
-            if (!(input.startsWith("http://") || input.startsWith("https://"))) {
-                homeViewModel.showSuggestions()
-            }
-            homeViewModel.homePublishSubject.onNext(input)
-        }
-
-        override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
-        }
-
-        override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-        }
-    }
-
-    private val itemListener = object : TopPageAdapter.TopPagesListener {
-        override fun onItemClicked(pageInfo: PageInfo) {
-            openNewTab(pageInfo.link)
-        }
-    }
-
-    private val menuListener = object : BrowserHomeListener {
-        override fun onBrowserMenuClicked() {
-            showPopupMenu()
         }
     }
 

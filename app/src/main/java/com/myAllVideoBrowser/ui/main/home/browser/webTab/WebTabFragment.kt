@@ -1,4 +1,10 @@
 package com.myAllVideoBrowser.ui.main.home.browser.webTab
+ 
+import com.myAllVideoBrowser.ui.compose.BrowserTopBar
+import com.myAllVideoBrowser.ui.compose.DownloadFab
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.livedata.observeAsState
 
 import android.annotation.SuppressLint
 import android.content.Intent
@@ -67,6 +73,7 @@ import org.json.JSONObject
 import java.util.UUID
 import javax.inject.Inject
 
+@OptIn(androidx.media3.common.util.UnstableApi::class)
 class WebTabFragment : BaseWebTabFragment() {
 
     companion object {
@@ -127,9 +134,8 @@ class WebTabFragment : BaseWebTabFragment() {
         workerEventProvider = mainActivity.mainViewModel.browserServicesProvider!!
         currentTabIndexProvider = mainActivity.mainViewModel.browserServicesProvider!!
 
-        tabViewModel = ViewModelProvider(this, viewModelFactory)[WebTabViewModel::class]
-        videoDetectionTabViewModel =
-            ViewModelProvider(this, viewModelFactory)[VideoDetectionTabViewModel::class]
+        tabViewModel = ViewModelProvider(this, viewModelFactory)[WebTabViewModel::class.java]
+videoDetectionTabViewModel = ViewModelProvider(this, viewModelFactory)[VideoDetectionTabViewModel::class.java]
         videoDetectionTabViewModel.settingsModel = mainActivity.settingsViewModel
         videoDetectionTabViewModel.webTabModel = tabViewModel
 
@@ -147,35 +153,74 @@ class WebTabFragment : BaseWebTabFragment() {
         recreateWebView(savedInstanceState)
 
         dataBinding = FragmentWebTabBinding.inflate(inflater, container, false).apply {
-            buildWebTabMenu(this.browserMenuButton, false)
-
             viewModel = tabViewModel
             browserMenuListener = tabListener
             settingsViewModel = mainActivity.settingsViewModel
             videoTabVModel = videoDetectionTabViewModel
 
-            etSearch.setAdapter(suggestionAdapter)
-            etSearch.addTextChangedListener(onInputTabChangeListener)
-            this.etSearch.imeOptions = EditorInfo.IME_ACTION_DONE
-            this.etSearch.setOnEditorActionListener { _, actionId, _ ->
-                if (actionId == EditorInfo.IME_ACTION_DONE) {
-                    this.etSearch.clearFocus()
-                    viewModel?.viewModelScope?.launch {
-                        delay(400)
-                        tabViewModel.loadPage((this@apply.etSearch as EditText).text.toString())
+            buildWebTabMenu(topBarCompose, false)
+            topBarCompose.setContent {
+                
+                // Better observation for Compose
+                var tabsList by androidx.compose.runtime.remember { 
+                    androidx.compose.runtime.mutableStateOf(tabManagerProvider.getTabsListChangeEvent().get() ?: emptyList()) 
+                }
+                var currentUrl by androidx.compose.runtime.remember { 
+                    androidx.compose.runtime.mutableStateOf(tabViewModel.getTabTextInput().get() ?: "") 
+                }
+                
+                androidx.compose.runtime.DisposableEffect(tabManagerProvider.getTabsListChangeEvent()) {
+                    val callback = object : Observable.OnPropertyChangedCallback() {
+                        override fun onPropertyChanged(sender: Observable?, propertyId: Int) {
+                            tabsList = tabManagerProvider.getTabsListChangeEvent().get() ?: emptyList()
+                        }
                     }
-                    false
-                } else false
+                    tabManagerProvider.getTabsListChangeEvent().addOnPropertyChangedCallback(callback)
+                    onDispose {
+                        tabManagerProvider.getTabsListChangeEvent().removeOnPropertyChangedCallback(callback)
+                    }
+                }
+                
+                androidx.compose.runtime.DisposableEffect(tabViewModel.getTabTextInput()) {
+                    val callback = object : Observable.OnPropertyChangedCallback() {
+                        override fun onPropertyChanged(sender: Observable?, propertyId: Int) {
+                            currentUrl = tabViewModel.getTabTextInput().get() ?: ""
+                        }
+                    }
+                    tabViewModel.getTabTextInput().addOnPropertyChangedCallback(callback)
+                    onDispose {
+                        tabViewModel.getTabTextInput().removeOnPropertyChangedCallback(callback)
+                    }
+                }
+
+                BrowserTopBar(
+                    tabCount = tabsList.size,
+                    url = currentUrl,
+                    onTabCountClick = {
+                        mainActivity.mainViewModel.openNavDrawerEvent.call()
+                    },
+                    onHomeClick = {
+                        mainActivity.mainViewModel.currentItem.set(HOME_TAB_INDEX)
+                    },
+                    onUrlClick = {
+                        tabViewModel.changeTabFocus(true)
+                    },
+                    onRefreshClick = {
+                        tabListener.onBrowserReloadClicked()
+                    },
+                    onMenuClick = {
+                        tabListener.onBrowserMenuClicked()
+                    }
+                )
             }
 
-            ivCloseTab.clipToOutline = true
-            ivGoForward.clipToOutline = true
-            ivGoBack.clipToOutline = true
-            ivCloseRefresh.clipToOutline = true
-
-            Glide.with(this@WebTabFragment).asGif().load(R.drawable.loading_floating)
-                .into(loadingWavy)
-            loadingWavy.clipToOutline = true
+            fabCompose.setContent {
+                DownloadFab(
+                    onClick = {
+                        videoDetectionTabViewModel.showVideoInfo()
+                    }
+                )
+            }
 
             configureWebView(this)
         }
@@ -401,7 +446,7 @@ class WebTabFragment : BaseWebTabFragment() {
             mainActivity.settingsViewModel,
             tabManagerProvider.getUpdateTabEvent(),
             pageTabProvider,
-            fragmentWebTabBinding,
+            dataBinding,
             appUtil,
             mainActivity
         )
@@ -484,21 +529,10 @@ class WebTabFragment : BaseWebTabFragment() {
         tabViewModel.changeTabFocusEvent.observe(viewLifecycleOwner) { isFocus ->
             isFocus.let {
                 if (it) {
-                    val oldValue = value
-                    val start = dataBinding.etSearch.selectionStart
-                    val end = dataBinding.etSearch.selectionEnd
-                    value = (start + end) / 2
-                    if (oldValue == value) {
-                        dataBinding.etSearch.selectAll()
-
-                    }
+                    // TODO: Implement focus handling with Compose if needed
                     tabViewModel.isTabInputFocused.set(true)
-                    appUtil.showSoftKeyboard(dataBinding.etSearch)
                 } else {
                     tabViewModel.isTabInputFocused.set(false)
-                    appUtil.hideSoftKeyboard(
-                        dataBinding.etSearch
-                    )
                 }
             }
         }

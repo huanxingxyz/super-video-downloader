@@ -1,5 +1,9 @@
 package com.myAllVideoBrowser.ui.main.home
 
+import com.myAllVideoBrowser.ui.compose.MainBottomNavigation
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+
 import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Intent
@@ -87,24 +91,45 @@ class MainActivity : BaseActivity() {
         dataBinding.viewPager.isUserInputEnabled = false
         dataBinding.viewPager.adapter = mainAdapter
         dataBinding.viewPager.registerOnPageChangeCallback(onPageChangeListener)
-        dataBinding.bottomBar.setOnItemSelectedListener { menuItem ->
-            val isBrowser = mainViewModel.currentItem.get() == 0
-            var goingToBrowser = false
-            when (menuItem.itemId) {
-                R.id.tab_browser -> {
-                    mainViewModel.currentItem.set(0)
-                    goingToBrowser = true
+
+        dataBinding.bottomBarCompose.setContent {
+            val currentItem by androidx.compose.runtime.livedata.observeAsState(initial = 0)
+            // Note: Since currentItem is ObservableField, I'll use a simpler bridge
+            var selectedIndex by androidx.compose.runtime.remember { 
+                androidx.compose.runtime.mutableStateOf(mainViewModel.currentItem.get() ?: 0) 
+            }
+            
+            // Bridge the ObservableField to Compose State
+            androidx.compose.runtime.DisposableEffect(mainViewModel.currentItem) {
+                val callback = object : androidx.databinding.Observable.OnPropertyChangedCallback() {
+                    override fun onPropertyChanged(sender: androidx.databinding.Observable?, propertyId: Int) {
+                        selectedIndex = mainViewModel.currentItem.get() ?: 0
+                    }
                 }
-
-                R.id.tab_progress -> mainViewModel.currentItem.set(1)
-                R.id.tab_video -> mainViewModel.currentItem.set(2)
-                else -> mainViewModel.currentItem.set(3)
+                mainViewModel.currentItem.addOnPropertyChangedCallback(callback)
+                onDispose {
+                    mainViewModel.currentItem.removeOnPropertyChangedCallback(callback)
+                }
             }
 
-            if (isBrowser && goingToBrowser && mainViewModel.isBrowserCurrent.get()) {
-                mainViewModel.openNavDrawerEvent.call()
-            }
-            return@setOnItemSelectedListener true
+            MainBottomNavigation(
+                selectedIndex = selectedIndex,
+                onTabSelected = { index ->
+                    val isBrowser = mainViewModel.currentItem.get() == 0
+                    var goingToBrowser = false
+                    if (index == 0) {
+                        mainViewModel.currentItem.set(0)
+                        goingToBrowser = true
+                    } else {
+                        mainViewModel.currentItem.set(index)
+                    }
+
+                    if (isBrowser && goingToBrowser && mainViewModel.isBrowserCurrent.get()) {
+                        mainViewModel.openNavDrawerEvent.call()
+                    }
+                    dataBinding.viewPager.currentItem = index
+                }
+            )
         }
         dataBinding.viewModel = mainViewModel
 

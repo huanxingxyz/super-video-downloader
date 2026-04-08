@@ -1,4 +1,10 @@
 package com.myAllVideoBrowser.ui.main.home.browser
+ 
+import com.myAllVideoBrowser.ui.compose.TabSwitcherScreen
+import com.myAllVideoBrowser.ui.compose.TabItem
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.livedata.observeAsState
 
 //import com.allVideoDownloaderXmaster.OpenForTesting
 
@@ -118,8 +124,6 @@ class BrowserFragment : BaseFragment(), BrowserServicesProvider {
     }
 
     private lateinit var tabsAdapter: TabsFragmentStateAdapter
-
-    private lateinit var drawerAdapter: WebTabsAdapter
 
     @Inject
     lateinit var viewModelFactory: ViewModelProvider.Factory
@@ -307,8 +311,6 @@ class BrowserFragment : BaseFragment(), BrowserServicesProvider {
 
         tabsAdapter = TabsFragmentStateAdapter(emptyList())
 
-        drawerAdapter = WebTabsAdapter(emptyList(), tabsListener)
-
         val webTabsManagerLayout =
             WrapContentLinearLayoutManager(context, LinearLayoutManager.VERTICAL, false)
         webTabsManagerLayout.reverseLayout = true
@@ -320,9 +322,78 @@ class BrowserFragment : BaseFragment(), BrowserServicesProvider {
             this.viewPager.setSwipeThreshold(500)
             this.viewPager.setOnGoThroughListener(onGoThroughListener)
             this.viewPager.isUserInputEnabled = false
-            this.tabsList.layoutManager = webTabsManagerLayout
-            this.tabsList.adapter = drawerAdapter
-            this.drawerLayoutContent.setBackgroundColor(color)
+            
+            this.drawerComposeView.setContent {
+                var tabsList by androidx.compose.runtime.remember { 
+                    androidx.compose.runtime.mutableStateOf(browserViewModel.tabs.get() ?: emptyList()) 
+                }
+                var currentIndex by androidx.compose.runtime.remember { 
+                    androidx.compose.runtime.mutableStateOf(browserViewModel.currentTab.get()) 
+                }
+
+                androidx.compose.runtime.DisposableEffect(browserViewModel.tabs) {
+                    val callback = object : Observable.OnPropertyChangedCallback() {
+                        override fun onPropertyChanged(sender: Observable?, propertyId: Int) {
+                            tabsList = browserViewModel.tabs.get() ?: emptyList()
+                        }
+                    }
+                    browserViewModel.tabs.addOnPropertyChangedCallback(callback)
+                    onDispose {
+                        browserViewModel.tabs.removeOnPropertyChangedCallback(callback)
+                    }
+                }
+                androidx.compose.runtime.DisposableEffect(browserViewModel.currentTab) {
+                    val callback = object : Observable.OnPropertyChangedCallback() {
+                        override fun onPropertyChanged(sender: Observable?, propertyId: Int) {
+                            currentIndex = browserViewModel.currentTab.get()
+                        }
+                    }
+                    browserViewModel.currentTab.addOnPropertyChangedCallback(callback)
+                    onDispose {
+                        browserViewModel.currentTab.removeOnPropertyChangedCallback(callback)
+                    }
+                }
+
+                val mappedTabs = tabsList.mapIndexed { index, webTab ->
+                    TabItem(
+                        id = webTab.id,
+                        title = webTab.title,
+                        url = webTab.url,
+                        isSelected = index == currentIndex
+                    )
+                }
+
+                TabSwitcherScreen(
+                    tabs = mappedTabs,
+                    onTabClick = { tabItem ->
+                        val webTab = tabsList.find { it.id == tabItem.id }
+                        if (webTab != null) {
+                            browserViewModel.selectWebTabEvent.value = webTab
+                            dataBinding.drawerLayout.close()
+                        }
+                    },
+                    onTabClose = { tabItem ->
+                        val webTab = tabsList.find { it.id == tabItem.id }
+                        if (webTab != null) {
+                            browserViewModel.closePageEvent.value = webTab
+                        }
+                    },
+                    onBackClick = {
+                        browserViewModel.instance?.onBrowserBackClicked()
+                    },
+                    onHomeClick = {
+                        browserViewModel.currentTab.set(HOME_TAB_INDEX)
+                        dataBinding.drawerLayout.close()
+                    },
+                    onForwardClick = {
+                        browserViewModel.instance?.onBrowserForwardClicked()
+                    },
+                    onAddTabClick = {
+                        browserViewModel.openPageEvent.value = WebTab.HOME_TAB
+                        dataBinding.drawerLayout.close()
+                    }
+                )
+            }
 
             this.viewModel = browserViewModel
         }

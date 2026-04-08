@@ -27,21 +27,19 @@
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
                 app:currentItem="@{viewModel.currentItem}"
-                app:layout_constraintBottom_toTopOf="@id/bottom_bar"
+                app:layout_constraintBottom_toTopOf="@+id/bottom_bar_compose"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
                 app:offScreenPageLimit="@{viewModel.offScreenPageLimit}" />
 
-            <com.google.android.material.bottomnavigation.BottomNavigationView
-                android:id="@+id/bottom_bar"
+            <androidx.compose.ui.platform.ComposeView
+                android:id="@+id/bottom_bar_compose"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:menu="@menu/menu_bottom_bar"
-                app:selectedItemId="@{viewModel.currentItem}" />
+                app:layout_constraintStart_toStartOf="parent" />
 
             <FrameLayout
                 android:layout_width="match_parent"

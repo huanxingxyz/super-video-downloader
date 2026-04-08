@@ -10,7 +10,9 @@ plugins {
     alias(libs.plugins.kotlin.allopen)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.coveralls)
+    alias(libs.plugins.kotlin.compose)
     kotlin("kapt")
+
     id("jacoco")
 }
 
@@ -161,7 +163,9 @@ android {
     buildFeatures {
         viewBinding = true
         buildConfig = true
+        compose = true
     }
+
 
     // Test Options
     testOptions {
@@ -303,6 +307,12 @@ dependencies {
     androidTestImplementation(libs.espressoCore)
     androidTestImplementation(libs.espressoIntents)
 
+    // Compose
+    implementation(platform(libs.compose.bom))
+    implementation(libs.bundles.compose)
+    debugImplementation(libs.compose.ui.tooling)
+
+
     println("✓ Dependencies resolved\n")
 }
 
@@ -406,6 +416,7 @@ fun validateNdkPath(ndkPath: String): String {
 
 val ndkPath = findNdkPath()
 val ndkPrebuiltFolder = validateNdkPath(ndkPath)
+
 
 // =========================================================================
 // ARCHITECTURE CONFIGURATIONS
