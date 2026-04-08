@@ -35,6 +35,12 @@ object ProxyManager {
         hops: List<ProxyHop>,
         dnsUrl: String? = null
     ): Boolean {
+        // 检查 Go 库是否已加载
+        if (!com.myAllVideoBrowser.v2ray.V2Ray.isLibraryLoaded) {
+            Log.w(TAG, "V2Ray library not loaded. Proxy features are disabled.")
+            return false
+        }
+        
         if (isProxyRunning()) {
             Log.w(TAG, "Proxy is already running. Stopping first.")
             stopLocalProxy()

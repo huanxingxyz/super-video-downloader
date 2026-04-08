@@ -682,8 +682,18 @@ archConfigs.forEach { arch ->
 
 // Hook Go build into Android build lifecycle
 project.afterEvaluate {
-    tasks.named("preBuild") {
-        dependsOn(copyAllGoSharedLibs)
+    // 默认跳过 Go 构建，如需启用请设置 SKIP_GO_BUILD=false
+    val skipGoBuild = System.getenv("SKIP_GO_BUILD")?.toBoolean() != false
+    
+    if (!skipGoBuild) {
+        tasks.named("preBuild") {
+            dependsOn(copyAllGoSharedLibs)
+        }
+        println("✓ Go build enabled")
+    } else {
+        println("⚠️  Go build SKIPPED by default")
+        println("   To enable: export SKIP_GO_BUILD=false")
+        println("   Proxy features will not be available")
     }
 
     // Add summary task for all Go builds

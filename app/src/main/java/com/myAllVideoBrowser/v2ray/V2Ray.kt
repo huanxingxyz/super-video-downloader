@@ -9,17 +9,23 @@ import android.util.Log
 object V2Ray {
 
     private const val TAG = "V2RayJNI"
+    
+    // 标记 Go 库是否成功加载
+    @JvmStatic
+    var isLibraryLoaded: Boolean = false
+        private set
 
     // This block loads the native library once, when this V2Ray object is first used.
     // "gojni" corresponds to the filename "libgojni.so".
     init {
         try {
             System.loadLibrary("gojni")
+            isLibraryLoaded = true
             Log.i(TAG, "Successfully loaded 'libgojni.so' native library.")
         } catch (e: UnsatisfiedLinkError) {
             // This error means the .so file was not found in the APK.
-            // This is a critical failure.
-            Log.e(TAG, "CRITICAL: Failed to load native library 'libgojni.so'.", e)
+            isLibraryLoaded = false
+            Log.w(TAG, "Native library 'libgojni.so' not found. Proxy features will be disabled.", e)
         }
     }
 

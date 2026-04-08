@@ -67,6 +67,13 @@ open class DLApplication : DaggerApplication() {
         RxJavaPlugins.setErrorHandler { error: Throwable? ->
             AppLogger.e("RxJavaError unhandled $error")
         }
+        
+        // 检查 Go 库是否加载，如果未加载则强制禁用代理
+        if (!com.myAllVideoBrowser.v2ray.V2Ray.isLibraryLoaded) {
+            AppLogger.w("V2Ray library not available. Disabling proxy features.")
+            sharedPrefHelper.setIsProxyOn(false)
+            sharedPrefHelper.setIsDohOn(false)
+        }
 
         CoroutineScope(Dispatchers.Default).launch {
             if (!file.exists()) {

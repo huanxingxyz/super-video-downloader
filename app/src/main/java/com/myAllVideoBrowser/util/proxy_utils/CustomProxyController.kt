@@ -51,6 +51,29 @@ class CustomProxyController @Inject constructor(
             return
         }
 
+        // 检查 Go 库是否加载，如果未加载则强制禁用代理
+        val goLibraryLoaded = com.myAllVideoBrowser.v2ray.V2Ray.isLibraryLoaded
+        if (!goLibraryLoaded && (proxy != Proxy.noProxy() || isDohEnabled)) {
+            AppLogger.w("V2Ray library not loaded. Forcing proxy to be disabled.")
+            // 强制清除代理设置
+            System.clearProperty("http.proxyHost")
+            System.clearProperty("http.proxyPort")
+            System.clearProperty("https.proxyHost")
+            System.clearProperty("https.proxyPort")
+            System.clearProperty("http.proxyUser")
+            System.clearProperty("http.proxyPassword")
+            System.clearProperty("https.proxyUser")
+            System.clearProperty("https.proxyPassword")
+            Authenticator.setDefault(null)
+            
+            if (WebViewFeature.isFeatureSupported(WebViewFeature.PROXY_OVERRIDE)) {
+                ProxyController.getInstance().clearProxyOverride({ }) {}
+            }
+            
+            lastAppliedConfig = newConfig
+            return
+        }
+
         val isProxyActive = proxy != Proxy.noProxy() || isDohEnabled
 
         if (isProxyActive) {
