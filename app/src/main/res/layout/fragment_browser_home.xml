@@ -5,7 +5,6 @@
     tools:context=".ui.main.home.browser.homeTab.BrowserHomeFragment">
 
     <data>
-
         <import type="android.view.View" />
 
         <variable
@@ -21,124 +20,164 @@
             type="com.myAllVideoBrowser.ui.main.home.MainViewModel" />
     </data>
 
-
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:gravity="center"
+        android:background="#FFFFFF"
         android:orientation="vertical">
+
+        <com.google.android.material.appbar.AppBarLayout
+            android:id="@+id/appBarLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:elevation="0dp"
+            android:background="@android:color/transparent"
+            android:paddingTop="8dp"
+            android:paddingBottom="8dp">
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <TextView
+                    android:id="@+id/tv_tab_count"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_marginStart="16dp"
+                    android:background="@drawable/tab_box_bg"
+                    android:gravity="center"
+                    android:text="6"
+                    android:textColor="#000000"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="parent">
+
+                    <ImageView
+                        android:id="@+id/iv_help"
+                        android:layout_width="48dp"
+                        android:layout_height="48dp"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:padding="12dp"
+                        android:src="@drawable/help_24px"
+                        app:tint="#000000" />
+
+                    <ImageView
+                        android:id="@+id/iv_settings"
+                        android:layout_width="48dp"
+                        android:layout_height="48dp"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:padding="12dp"
+                        android:src="@drawable/settings_24px"
+                        app:tint="#000000" />
+
+                    <ImageView
+                        android:id="@+id/browser_home_menu_button"
+                        android:layout_width="48dp"
+                        android:layout_height="48dp"
+                        android:layout_marginEnd="8dp"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:clickable="true"
+                        android:contentDescription="Menu"
+                        android:focusable="true"
+                        android:onClick="@{() -> browserMenuListener.onBrowserMenuClicked()}"
+                        android:padding="12dp"
+                        android:src="@drawable/ic_more_gray_24dp"
+                        app:tint="#000000" />
+                </LinearLayout>
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+        </com.google.android.material.appbar.AppBarLayout>
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1">
+            android:layout_height="wrap_content"
+            android:paddingHorizontal="24dp"
+            android:paddingTop="16dp">
 
-            <com.google.android.material.appbar.AppBarLayout
-                android:id="@id/appBarLayout"
+            <LinearLayout
+                android:id="@+id/search_container"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
+                android:layout_height="48dp"
+                android:background="@drawable/search_bg"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
                 app:layout_constraintTop_toTopOf="parent">
 
-                <com.google.android.material.appbar.MaterialToolbar
-                    android:id="@+id/materialToolbar"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content">
+                <com.google.android.material.textfield.MaterialAutoCompleteTextView
+                    android:id="@+id/home_et_search"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:background="@null"
+                    android:focusable="@{viewModel.isSearchInputFocused}"
+                    android:focusableInTouchMode="@{viewModel.isSearchInputFocused}"
+                    android:hint="搜索或输入网址"
+                    android:onClick="@{() -> viewModel.changeSearchFocus(true)}"
+                    android:paddingHorizontal="16dp"
+                    android:singleLine="true"
+                    android:text="@{viewModel.searchTextInput}"
+                    android:textColor="#333333"
+                    android:textColorHint="#999999"
+                    android:textSize="14sp"
+                    app:items="@{viewModel.listSuggestions}" />
 
-                    <com.google.android.material.card.MaterialCardView
-                        android:id="@+id/browser_home_menu_container"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:layout_marginEnd="@dimen/padding_small"
-                        android:elevation="0dp"
-                        android:shadowColor="@android:color/transparent"
-                        app:cardBackgroundColor="@android:color/transparent"
-                        app:cardCornerRadius="8dp"
-                        app:layout_constraintBottom_toBottomOf="parent"
-                        app:layout_constraintRight_toRightOf="parent"
-                        app:layout_constraintTop_toTopOf="parent"
-                        app:layout_constraintVertical_bias="0.0"
-                        app:strokeColor="@android:color/transparent">
-
-                        <androidx.appcompat.widget.AppCompatImageView
-                            android:id="@+id/browser_home_menu_button"
-                            android:layout_width="49dp"
-                            android:layout_height="49dp"
-                            android:layout_gravity="end"
-                            android:contentDescription="@string/menu"
-                            android:onClick="@{() -> browserMenuListener.onBrowserMenuClicked()}"
-                            android:padding="@dimen/padding_small"
-                            app:srcCompat="@drawable/ic_more_24dp"
-                            tools:ignore="VectorDrawableCompat" />
-                    </com.google.android.material.card.MaterialCardView>
-                </com.google.android.material.appbar.MaterialToolbar>
-
-            </com.google.android.material.appbar.AppBarLayout>
-
-
-            <com.google.android.material.textfield.MaterialAutoCompleteTextView
-                android:id="@+id/home_et_search"
-                android:layout_width="match_parent"
-                android:layout_height="60dp"
-                android:layout_marginStart="24dp"
-                android:layout_marginEnd="24dp"
-                android:layout_marginBottom="@dimen/padding_normal"
-                android:background="@drawable/round_corner"
-                android:elevation="5dp"
-                android:focusable="@{viewModel.isSearchInputFocused}"
-                android:focusableInTouchMode="@{viewModel.isSearchInputFocused}"
-                android:hint="@string/browser_search_hint"
-                android:maxWidth="450dp"
-                android:onClick="@{() -> viewModel.changeSearchFocus(true)}"
-                android:paddingStart="@dimen/padding_normal"
-                android:paddingEnd="@dimen/padding_normal"
-                android:singleLine="true"
-                android:text="@{viewModel.searchTextInput}"
-                android:textSize="@dimen/text_small"
-                app:items="@{viewModel.listSuggestions}"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintHorizontal_bias="1.0"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/appBarLayout"
-                app:layout_constraintVertical_bias="0.476" />
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/go_button"
-                android:layout_width="150dp"
-                android:layout_height="50dp"
-                android:layout_margin="@dimen/padding_normal"
-                android:text="@string/go"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/home_et_search"
-                app:layout_constraintVertical_bias="0.0" />
+                <ImageView
+                    android:id="@+id/go_button"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:padding="14dp"
+                    android:src="@drawable/arrow_back24px"
+                    app:tint="#999999" />
+            </LinearLayout>
 
         </androidx.constraintlayout.widget.ConstraintLayout>
 
         <GridView
             android:id="@+id/top_pages_grid"
             android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_gravity="center"
-            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
             android:gravity="center"
-            android:horizontalSpacing="4dp"
+            android:horizontalSpacing="8dp"
             android:numColumns="4"
-            android:padding="4dp"
-            android:verticalSpacing="4dp"
+            android:paddingHorizontal="16dp"
+            android:verticalSpacing="16dp"
             app:items="@{mainVModel.bookmarksList}" />
 
-
-        <LinearLayout
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_download_method"
             android:layout_width="match_parent"
-            android:layout_height="16dp"
-            android:layout_gravity="bottom|center"
-            android:gravity="center">
+            android:layout_height="54dp"
+            android:layout_marginHorizontal="32dp"
+            android:layout_marginTop="32dp"
+            android:backgroundTint="#1877F2"
+            android:insetTop="0dp"
+            android:insetBottom="0dp"
+            android:text="下载方法"
+            android:textColor="#FFFFFF"
+            android:textSize="16sp"
+            app:cornerRadius="27dp"
+            app:icon="@drawable/help_24px"
+            app:iconGravity="textStart"
+            app:iconTint="#FFFFFF" />
 
-        </LinearLayout>
     </LinearLayout>
-
 </layout>

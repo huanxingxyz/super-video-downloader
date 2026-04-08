@@ -18,6 +18,7 @@ class WebTab(
 
     companion object {
         @SuppressLint("StaticFieldLeak")
+        @JvmField
         val HOME_TAB = WebTab(
             "",
             "Home Tab",

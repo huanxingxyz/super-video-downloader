@@ -45,6 +45,10 @@ class BrowserViewModel @Inject constructor() : BaseViewModel() {
     override fun stop() {
         instance = null
     }
+
+    fun openHomeTab() {
+        openPageEvent.value = WebTab.HOME_TAB
+    }
 }
 
 abstract class DownloadButtonState

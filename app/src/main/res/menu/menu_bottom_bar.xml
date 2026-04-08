@@ -5,19 +5,19 @@
         android:id="@+id/tab_browser"
         android:enabled="true"
         android:icon="@drawable/tab_group_24px"
-        android:title="Browser"
+        android:title="窗口"
         app:showAsAction="ifRoom" />
     <item
         android:id="@+id/tab_progress"
         android:enabled="true"
         android:icon="@drawable/downloading_24px"
-        android:title="Progress"
+        android:title="下载中"
         app:showAsAction="ifRoom" />
     <item
         android:id="@+id/tab_video"
         android:enabled="true"
         android:icon="@drawable/video_library_24px"
-        android:title="Video"
+        android:title="已下载"
         app:showAsAction="ifRoom" />
 
     <item
