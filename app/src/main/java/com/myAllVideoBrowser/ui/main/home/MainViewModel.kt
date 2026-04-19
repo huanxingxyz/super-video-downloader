@@ -46,6 +46,10 @@ class MainViewModel @Inject constructor(
 
     val openNavDrawerEvent = SingleLiveEvent<Unit?>()
 
+    fun openNavDrawer() {
+        openNavDrawerEvent.call()
+    }
+
     var bookmarksList: ObservableField<MutableList<PageInfo>> = ObservableField(mutableListOf())
 
     private val executorSingle = Executors.newSingleThreadExecutor().asCoroutineDispatcher()

@@ -2,6 +2,7 @@ package com.myAllVideoBrowser.ui.main.home.browser.homeTab
 
 import androidx.databinding.ObservableBoolean
 import androidx.databinding.ObservableField
+import androidx.databinding.ObservableInt
 import androidx.lifecycle.viewModelScope
 import com.myAllVideoBrowser.data.local.model.Suggestion
 import com.myAllVideoBrowser.ui.main.base.BaseViewModel
@@ -26,6 +27,7 @@ class BrowserHomeViewModel @Inject constructor(
     val isSearchInputFocused = ObservableBoolean(false)
     val searchTextInput = ObservableField("")
     val listSuggestions: ObservableField<MutableList<Suggestion>> = ObservableField(mutableListOf())
+    val tabCount = ObservableInt(1)
 
     lateinit var homePublishSubject: PublishSubject<String>
 

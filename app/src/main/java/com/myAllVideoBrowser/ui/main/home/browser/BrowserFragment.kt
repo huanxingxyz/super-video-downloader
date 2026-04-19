@@ -396,6 +396,7 @@ class BrowserFragment : BaseFragment(), BrowserServicesProvider {
         browserViewModel.selectWebTabEvent.observe(viewLifecycleOwner) { webTab ->
             val index = browserViewModel.tabs.get()?.indexOf(webTab) ?: 0
             browserViewModel.currentTab.set(index.coerceAtLeast(0))
+            dataBinding.drawerLayout.close()
         }
     }
 

@@ -109,9 +109,24 @@ class BrowserHomeFragment : BaseWebTabFragment() {
                     openNewTab(inputText)
                 }
             }
+
+            openPageIProvider.getTabsListChangeEvent().addOnPropertyChangedCallback(tabsObserver)
+            homeViewModel.tabCount.set(openPageIProvider.getTabsListChangeEvent().get()?.size ?: 1)
         }
 
         return binding.root
+    }
+
+    private val tabsObserver = object : androidx.databinding.Observable.OnPropertyChangedCallback() {
+        override fun onPropertyChanged(sender: androidx.databinding.Observable?, propertyId: Int) {
+            val tabs = openPageIProvider.getTabsListChangeEvent().get()
+            homeViewModel.tabCount.set(tabs?.size ?: 1)
+        }
+    }
+
+    override fun onDestroyView() {
+        openPageIProvider.getTabsListChangeEvent().removeOnPropertyChangedCallback(tabsObserver)
+        super.onDestroyView()
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
